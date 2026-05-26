@@ -1,5 +1,9 @@
-﻿namespace SimulationManager.Application.DTOs.Simulation;
+﻿using SimulationManager.Domain.ValueObjects;
 
-public class CreateSimulationDto
-{
-}
+namespace SimulationManager.Application.DTOs.Simulation;
+
+public record CreateSimulationDto(
+    SimulationParametersDetails Parameters, 
+    int FuelCompositionId,
+    int UserId
+);

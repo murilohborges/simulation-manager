@@ -1,5 +1,13 @@
-﻿namespace SimulationManager.Application.DTOs.Simulation;
+﻿using SimulationManager.Domain.ValueObjects;
 
-public class SimulationResponseDto
-{
-}
+namespace SimulationManager.Application.DTOs.Simulation;
+
+public record SimulationResponseDto(
+    int Id,
+    string Status,
+    int UserId,
+    int FuelCompositionId,
+    SimulationParametersDetails Parameters,
+    DateTime CreatedAt,
+    SimulationResultResponseDto? Result
+);
