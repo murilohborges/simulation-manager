@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using SimulationManager.Infrastructure.Seed;
 using SimulationManager.Domain.Interfaces;
 using SimulationManager.Api.Middlewares;
+using SimulationManager.Infrastructure.ExternalServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IFuelCompositionRepository, FuelCompositionRepository>();
+builder.Services.AddScoped<ISimulationRepository, SimulationRepository>();
+
+// External Service
+builder.Services.AddHttpClient<ISimulationExternalService, SimulationExternalService>(client =>
+{
+    client.BaseAddress = new Uri("https://cycle-comb-calc.onrender.com/");
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
 
 var app = builder.Build();
 
