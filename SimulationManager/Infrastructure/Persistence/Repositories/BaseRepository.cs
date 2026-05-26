@@ -15,7 +15,7 @@ public abstract class BaseRepository<T> : IRepository<T> where T : class
     public async Task<IEnumerable<T>> GetAllAsync()
         => await _context.Set<T>().AsNoTracking().ToListAsync();
 
-    public async Task<(IEnumerable<T> Data, int TotalRecords)> GetPagedAsync(
+    public virtual async Task<(IEnumerable<T> Data, int TotalRecords)> GetPagedAsync(
         int pageNumber,
         int pageSize)
     {
