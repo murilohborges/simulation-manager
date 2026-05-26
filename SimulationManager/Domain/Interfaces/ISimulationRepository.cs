@@ -1,5 +1,10 @@
-﻿namespace SimulationManager.Domain.Interfaces;
+﻿using SimulationManager.Domain.Entities;
 
-public interface ISimulationRepository
+namespace SimulationManager.Domain.Interfaces;
+
+public interface ISimulationRepository : IRepository<Simulation>
 {
+    Task<Simulation?> GetByIdWithResultAsync(int id);
+    Task UpdateStatusAsync(int id, string status);
+    Task SaveResultAsync(SimulationResult result);
 }
