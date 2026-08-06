@@ -14,7 +14,7 @@ The project integrates with an external FastAPI service responsible for thermody
 - Entity Framework Core
 
 ### Database
-- PostgreSQL
+- MySQL
 
 ### External Integration
 - FastAPI
