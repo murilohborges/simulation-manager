@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SimulationManager.Domain.Entities;
-using SimulationManager.Application.DTOs.User;
-using SimulationManager.Application.DTOs.FuelComposition;
-using SimulationManager.Domain.Interfaces;
 using SimulationManager.Application.DTOs.Common;
+using SimulationManager.Application.DTOs.FuelComposition;
+using SimulationManager.Application.DTOs.User;
+using SimulationManager.Application.Interfaces;
+using SimulationManager.Application.Services;
+using SimulationManager.Domain.Entities;
+using SimulationManager.Domain.Exceptions;
+using SimulationManager.Domain.Interfaces;
 
 namespace SimulationManager.Api.Controllers
 {
@@ -13,84 +16,54 @@ namespace SimulationManager.Api.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly IUserRepository _userRepository;
+        private readonly IUserService _userService;
+        private readonly ILogger<UsersController> _logger;
 
-        public UsersController(IUserRepository userRepository)
+        public UsersController(IUserService userService, ILogger<UsersController> logger)
         {
-            _userRepository = userRepository;
-        }
-
-        [HttpGet("fuel-compositions")]
-        public async Task<ActionResult<IEnumerable<UserReponseDto>>> GetUsersFuelCompositions()
-        {
-            var users = await _userRepository.GetUsersWithFuelCompositionsAsync();
-
-            var response = users.Select(u => new UserReponseDto(
-                u.Id,
-                u.UserName!,
-                u.Role!,
-                u.CreatedAt,
-                u.FuelCompositions?.Select(f => new FuelCompositionResponseDto(
-                    f.Id,
-                    f.Name!,
-                    f.Composition,
-                    f.CreatedAt,
-                    f.UserId
-                )).ToList()
-
-            ));
-            return Ok(response);
+            _userService = userService;
+            _logger = logger;
         }
 
         [HttpGet]
         public async Task<ActionResult<PagedResponseDto<UserReponseDto>>> Get(
             [FromQuery] PaginationRequestDto pagination)
         {
-            var (users, totalRecords) = await _userRepository.GetPagedAsync(
+            var result = await _userService.GetPagedUsersAsync(
                 pagination.PageNumber,
                 pagination.PageSize);
 
-            var data = users.Select(u => new UserReponseDto(
-                u.Id,
-                u.UserName!,
-                u.Role!,
-                u.CreatedAt
-            ));
-
-            return Ok(new PagedResponseDto<UserReponseDto>(
-                data,
-                pagination.PageNumber,
-                pagination.PageSize,
-                totalRecords
-            ));
+            return Ok(result);
         }
 
         [HttpGet("{id:int}", Name ="GetUser")]
         public async Task<ActionResult<UserReponseDto>> Get(int id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
+            var user = await _userService.GetUserByIdAsync(id);
+
             if(user is null)
             {
-                return NotFound("User is not Found...");
+                return NotFound(new { error = "User not found" });
             }
-            return Ok(new UserReponseDto(user.Id, user.UserName!, user.Role!, user.CreatedAt));
+
+            return Ok(user);
         }
 
         [HttpPost]
         public async Task<ActionResult<UserReponseDto>> Post([FromBody] CreateUserDto dto)
         {
-            var user = new User
+            try
             {
-                UserName = dto.UserName,
-                Role = dto.Role,
-                CreatedAt = DateTime.UtcNow
-            };
+                var result = await _userService.CreateUserAsync(dto);
 
-            await _userRepository.CreateAsync(user);
+                return CreatedAtRoute("GetUser", new {id = result.Id}, result );
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Error creating user");
+                return StatusCode(500, new { error = "An error occurred while creating user" });
+            }
 
-            var response = new UserReponseDto(user.Id, user.UserName!, user.Role!, user.CreatedAt);
-            return new CreatedAtRouteResult("GetUser", 
-                new { id = user.Id}, response);
         }
 
         [HttpPut]
@@ -98,35 +71,41 @@ namespace SimulationManager.Api.Controllers
             int id,
             [FromBody] UpdateUserDto dto)
         {
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user is null)
-                return NotFound($"User {id} not found.");
+            try
+            {
+                var result = await _userService.UpdateUserAsync(id, dto);
 
-            user.UserName = dto.UserName;
-            user.Role = dto.Role;
-
-            await _userRepository.UpdateAsync(user);
-
-            return Ok(new UserReponseDto(
-                user.Id,
-                user.UserName!,
-                user.Role!,
-                user.CreatedAt
-            ));
+                return Ok(result);
+            }
+            catch(NotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Error updating user");
+                return StatusCode(500, new { error = "An error occurred while updating user" });
+            }
         }
 
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> Delete(int id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
-
-            if(user is null)
+            try
             {
-                return NotFound("User not found...");
-            }
+                await _userService.DeleteUserAsync(id);
 
-            await _userRepository.DeleteAsync(user);
-            return NoContent();
+                return NoContent();
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting user");
+                return StatusCode(500, new { error = "An error occurred while deleting user" });
+            }
         }
 
     }

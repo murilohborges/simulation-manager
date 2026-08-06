@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using SimulationManager.Api.Middlewares;
+using SimulationManager.Application.Interfaces;
+using SimulationManager.Application.Services;
+using SimulationManager.Domain.Interfaces;
+using SimulationManager.Infrastructure.ExternalServices;
 using SimulationManager.Infrastructure.Persistence;
 using SimulationManager.Infrastructure.Persistence.Repositories;
-using System.Text.Json.Serialization;
 using SimulationManager.Infrastructure.Seed;
-using SimulationManager.Domain.Interfaces;
-using SimulationManager.Api.Middlewares;
-using SimulationManager.Infrastructure.ExternalServices;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IFuelCompositionRepository, FuelCompositionRepository>();
 builder.Services.AddScoped<ISimulationRepository, SimulationRepository>();
+
+// Add Services
+builder.Services.AddScoped<IFuelCompositionService, FuelCompositionService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ISimulationService, SimulationService>();
 
 // External Service
 builder.Services.AddHttpClient<ISimulationExternalService, SimulationExternalService>(client =>
