@@ -10,7 +10,7 @@ using SimulationManager.Domain.Exceptions;
 
 namespace SimulationManager.Api.Controllers
 {
-    [Route("api/fuel-composition")]
+    [Route("api/fuel-compositions")]
     [ApiController]
     public class FuelCompositionController : ControllerBase
     {
