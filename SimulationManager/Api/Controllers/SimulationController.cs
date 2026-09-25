@@ -10,7 +10,7 @@ using System.Text.Json;
 
 namespace SimulationManager.Api.Controllers;
 
-[Route("api/simulation")]
+[Route("api/simulations")]
 [ApiController]
 public class SimulationController : ControllerBase
 {

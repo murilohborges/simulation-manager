@@ -12,7 +12,7 @@ using SimulationManager.Domain.Interfaces;
 
 namespace SimulationManager.Api.Controllers
 {
-    [Route("api/user")]
+    [Route("api/users")]
     [ApiController]
     public class UsersController : ControllerBase
     {
